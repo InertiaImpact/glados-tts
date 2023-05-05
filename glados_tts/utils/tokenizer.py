@@ -1,6 +1,6 @@
 from typing import List
 
-from utils.symbols import phonemes
+from glados_tts.utils.symbols import phonemes
 
 
 class Tokenizer:

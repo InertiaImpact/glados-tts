@@ -1,0 +1,39 @@
+[tool.poetry]
+name = "glados-tts"
+version = "0.1.0"
+description = "A GLaDOS TTS, using Forward Tacotron and HiFiGAN. Inference is fast and stable, even on the CPU. A low quality vocoder model is included for mobile use. "
+authors = [
+    "Ben Kristinsson <ben@sudo.is>",
+    "VRCWizard",
+    "Timmy Knight"
+]
+homepage = "https://git.sudo.is/ben/glados-tts"
+repository = "https://git.sudo.is/ben/glados-tts"
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+click = "^8.1.3"
+loguru = "^0.7.0"
+phonemizer = "^3.2.1"
+python = "^3.9"
+torch = "^2.0.0"
+inflect = "^6.0.4"
+Unidecode = "^1.3.6"
+Flask = "^2.2.3"
+PySoundFile = "^0.9.0.post1"
+numpy = "^1.24.2"
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^2.0.2"
+flake8 = "^6.0.0"
+isort = "^5.12.0"
+poethepoet = "^0.19.0"
+pytest = "^7.3.0"
+
+[tool.poetry.scripts]
+engine = "glados_tts.engine:main"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

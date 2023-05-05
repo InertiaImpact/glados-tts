@@ -1,8 +1,12 @@
-import torch
-from utils.tools import prepare_text
-from scipy.io.wavfile import write
 import time
 from sys import modules as mod
+
+import torch
+import soundfile
+
+from glados_tts.utils.tools import prepare_text
+
+
 try:
     import winsound
     import os
@@ -30,7 +34,7 @@ for i in range(2):
     init_mel = init['mel_post'].to(device)
     init_vo = vocoder(init_mel)
 
-while(1):
+while (1):
     text = input("Input: ")
 
     # Tokenize, clean and phonemize input text
@@ -48,16 +52,16 @@ while(1):
         mel = tts_output['mel_post'].to(device)
         audio = vocoder(mel)
         print("HiFiGAN took " + str((time.time() - old_time) * 1000) + "ms")
-        
+
         # Normalize audio to fit in wav-file
         audio = audio.squeeze()
         audio = audio * 32768.0
         audio = audio.cpu().numpy().astype('int16')
         output_file = ('output.wav')
-        
+
         # Write audio file to disk
         # 22,05 kHz sample rate
-        write(output_file, 22050, audio)
+        soundfile.write(output_file, audio, 22050)
 
         # Play audio file
         if 'winsound' in mod:
