@@ -7,6 +7,7 @@ from unidecode import unidecode
 from glados_tts.utils.numbers import normalize_numbers
 from glados_tts.utils.symbols import phonemes_set
 
+
 # Regular expression matching whitespace:
 _whitespace_re = re.compile(r'\s+')
 
@@ -68,25 +69,24 @@ def english_cleaners(text):
 
 
 def to_phonemes(text: str, lang: str) -> str:
-    phonemes = phonemize(text,
-                         language=lang,
-                         backend='espeak',
-                         strip=True,
-                         preserve_punctuation=True,
-                         with_stress=False,
-                         njobs=1,
-                         punctuation_marks=';:,.!?¡¿—…"«»“”()',
-                         language_switch='remove-flags')
+    phonemes = phonemize(
+        text,
+        language=lang,
+        backend='espeak',
+        strip=True,
+        preserve_punctuation=True,
+        with_stress=False,
+        njobs=1,
+        punctuation_marks=';:,.!?¡¿—…"«»“”()',
+        language_switch='remove-flags'
+    )
     phonemes = ''.join([p for p in phonemes if p in phonemes_set])
     return phonemes
 
 
 class Cleaner:
 
-    def __init__(self,
-                 cleaner_name: str,
-                 use_phonemes: bool,
-                 lang: str) -> None:
+    def __init__(self, cleaner_name: str, use_phonemes: bool, lang: str) -> None:
         if cleaner_name == 'english_cleaners':
             self.clean_func = english_cleaners
         elif cleaner_name == 'no_cleaners':

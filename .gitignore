@@ -2,10 +2,20 @@ __pycache__/
 dist/
 glados_tts.egg-info/
 *.pyc
+.clutter/
 
 audio/*
 !audio/.gitkeep
 *.wav
+config.py
+config.json
+config.toml
+config.yaml
+config.yml
+glados.json
+glados.toml
+glados.yaml
+glados.yml
 
 *~
 .#*

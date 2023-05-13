@@ -9,7 +9,8 @@ Neural network based TTS Engine.
 
 ## Description
 The initial, regular Tacotron model was trained first on LJSpeech, and
-then on a heavily modified version of the Ellen McClain dataset (all
+then on a heavily modified version of the [Ellen
+McClain](https://en.wikipedia.org/wiki/Ellen_McLain) dataset (all
 non-Portal 2 voice lines removed, punctuation added).
 
 * The Forward Tacotron model was only trained on about 600 voice lines.
@@ -28,31 +29,15 @@ This fork modernizes and improves the Python code in the project and does a bunc
 * `[DONE]`: Gets rid of the `SciPy` dependency (replaced with the more modern and lightwight [`pysoundfile`](https://github.com/gooofy/py-espeak-ng) (since all it was used for was writing a `.wav` file to disk)
 * `[DONE]`: Support modern stable Python 3 versions, and update dependencies.
 * `[DONE]`: Versioned packages with `poetry` and `pyproject.toml`
+* `[DONE]`: Configuration handling with `click`.
+* `[DONE]`: Better logging with `loguru`
 * `[WIP]`: Python coding style and code quality improvements (proper handling of `file` object, improved logging..)
-* `[TODO]`: Support Home Assistant through the [`notify` integration](https://www.home-assistant.io/integrations/notify/)
-* `[TODO]`: Configuration handling with `click`.
-* `[TODO]`: Better logging with `loguru`
-* `[TODO]`: Using `waitress` as a WSGI-server for production-capable deployments
+* `[WIP]`: Switch to using ASGI with `uvicorn` and `fastapi` instead of Flask and WSGI, and support production-capable deployments as default.
 * `[TODO]`: Docker support
+* `[TODO]`: Support Home Assistant through the [`notify` integration](https://www.home-assistant.io/integrations/notify/)
 * `[TODO]`: see if its possible to avoid `espeak-ng` as a system package dependency (python bindings, buliding the C library, etc)
 
 No work on the speech model itself is expected.
-
-### Home Assistant `notify` service
-
-configuration in `configuration.yaml` (or a `package/`):
-
-```yaml
-# Enable rest api
-api:
-
-notify:
-  - name: glados
-    platform: rest
-    resource: http://${GLADOS}/notify
-```
-
-This is roughly how it would work (not done yet).
 
 ## Install
 
