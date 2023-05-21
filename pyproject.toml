@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "glados-tts"
-version = "0.1.0"
+version = "0.2.0"
 description = "A GLaDOS TTS, using Forward Tacotron and HiFiGAN. Inference is fast and stable, even on the CPU. A low quality vocoder model is included for mobile use. "
 authors = [
     "Ben Kristinsson <ben@sudo.is>",
@@ -38,6 +38,8 @@ pytest = "^7.3.0"
 
 [tool.poetry.scripts]
 gladosctl = "glados_tts.gladosctl:main"
+
+[tool.poetry_bumpversion.file."glados_tts/__init__.py"]
 
 [build-system]
 requires = ["poetry-core"]
