@@ -7,16 +7,6 @@
 
 Neural network based TTS Engine.
 
-## Description
-The initial, regular Tacotron model was trained first on LJSpeech, and
-then on a heavily modified version of the [Ellen
-McClain](https://en.wikipedia.org/wiki/Ellen_McLain) dataset (all
-non-Portal 2 voice lines removed, punctuation added).
-
-* The Forward Tacotron model was only trained on about 600 voice lines.
-* The HiFiGAN model was generated through transfer learning from the sample.
-* All models have been optimized and quantized.
-
 ## Notes about this fork
 
 Forked by [`ben`](https://git.sudo.is/ben) (:github: [`@benediktkr`](https://github.com/benediktkr)) from
@@ -38,6 +28,18 @@ This fork modernizes and improves the Python code in the project and does a bunc
 * `[TODO]`: see if its possible to avoid `espeak-ng` as a system package dependency (python bindings, buliding the C library, etc)
 
 No work on the speech model itself is expected.
+
+![chell](chell.jpg)
+
+## Description
+The initial, regular Tacotron model was trained first on LJSpeech, and
+then on a heavily modified version of the [Ellen
+McClain](https://en.wikipedia.org/wiki/Ellen_McLain) dataset (all
+non-Portal 2 voice lines removed, punctuation added).
+
+* The Forward Tacotron model was only trained on about 600 voice lines.
+* The HiFiGAN model was generated through transfer learning from the sample.
+* All models have been optimized and quantized.
 
 ## Install
 
@@ -77,6 +79,4 @@ The TTS engine can also run as a web server:
 poetry run gladosctl restapi
 ```
 
-A public instance of the http api is running at `http://www.sudo.is/api/glados`, where you can also read [api documentation](https://www.sudo.is/api/glados/docs). 
-
-![chell](chell.jpg)
+A public instance of the http api is running at `http://www.sudo.is/api/glados`, where you can also read [api documentation](https://www.sudo.is/api/glados/docs).

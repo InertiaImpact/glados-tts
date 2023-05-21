@@ -6,14 +6,6 @@ ARG UID=1337
 ARG NAME=glados
 ENV TERM=xterm-256color
 
-# COPY docker/apk/repositories /etc/apk/repositories
-
-# RUN set -x && \
-#     adduser --disabled-password --uid ${UID} glados && \
-#     apk upgrade --update --no-cache && \
-#     apk add --update --no-cache espeak-ng@testing curl
-
-
 RUN set -x && \
     useradd -u ${UID} -m glados && \
     apt-get update && \
@@ -26,7 +18,7 @@ ENV PYTHONPATH "/usr/lib/python3.10/site-packages:/home/glados/.local/lib/python
 FROM base as builder
 
 RUN set -x && \
-    ln -sfv /usr/local/src/glados /opt/glados
+    ln -sfv /usr/local/src/glados-tts /opt/glados-tts
 USER glados
 
 RUN set -x && \
@@ -34,9 +26,9 @@ RUN set -x && \
     python3 -m pip cache purge && \
     poetry self -V
 
-COPY --chown=glados .flake8 poetry.lock pyproject.toml /usr/local/src/glados/
+COPY --chown=glados .flake8 poetry.lock pyproject.toml /usr/local/src/glados-tts/
 # change dir after COPY --chown, otherwise root owns it
-WORKDIR /usr/local/src/glados/
+WORKDIR /usr/local/src/glados-tts/
 
 # install dependencies with poetry and then freeze them in a file, so
 # the final stage wont have to install them on each docker build
@@ -75,20 +67,23 @@ ENTRYPOINT ["poetry"]
 CMD ["build"]
 
 FROM base as final
-ARG NAME=glados
-ENV NAME=glados
-USER glados
-COPY --chown=glados --from=builder /usr/local/src/glados/requirements.txt /usr/local/src/glados/
-RUN set -x && \
-    python3 -m pip install -r /usr/local/src/glados/requirements.txt && \
-    python3 -m pip cache purge && \
-    rm -v /usr/local/src/glados/requirements.txt
-COPY --chown=glados --from=builder /usr/local/src/glados/dist /usr/local/src/glados/dist/
+# the pythondocker pipeline from shared-jenkins-pipelines expects to find
+# builds in /opt/${NAME}/builds
 
 RUN set -x && \
-    ls -1 /usr/local/src/glados/dist && \
-    python3 -m pip install /usr/local/src/glados/dist/glados*tts-*.tar.gz && \
-    rm -vrf /usr/local/src/glados/dist/
+    ln -sfv /usr/local/src/glados-tts /opt/glados-tts
+USER glados
+COPY --chown=glados --from=builder /usr/local/src/glados-tts/requirements.txt /usr/local/src/glados-tts/
+RUN set -x && \
+    python3 -m pip install -r /usr/local/src/glados-tts/requirements.txt && \
+    python3 -m pip cache purge && \
+    rm -v /usr/local/src/glados-tts/requirements.txt
+COPY --chown=glados --from=builder /usr/local/src/glados-tts/dist /usr/local/src/glados-tts/dist/
+
+RUN set -x && \
+    ls -1 /usr/local/src/glados-tts/dist && \
+    python3 -m pip install /usr/local/src/glados-tts/dist/glados*tts-*.tar.gz && \
+    rm -vrf /usr/local/src/glados-tts/dist/
 
 HEALTHCHECK --start-period=5s --interval=15s --timeout=1s \
     CMD curl -sSf http://localhost:8124/health
