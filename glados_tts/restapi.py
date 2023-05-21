@@ -151,7 +151,7 @@ def create_app(restapi_config):
     app.include_router(mary_router, prefix='/mary', tags=['mary'])
 
 
-    @app.get("/process", tags=["api"])
+    @app.get("/", tags=["api"])
     async def index(request: Request):
         return {
             "info": "a http json api for GLaDOS Text-to-speech",

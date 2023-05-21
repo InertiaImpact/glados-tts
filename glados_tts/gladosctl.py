@@ -32,6 +32,10 @@ def read_config_file(ctx, param, value):
             config = json.load(f)
         ctx.default_map.update(config)
         ctx.meta.update(config)
+    except json.decoder.JSONDecodeError as e:
+        logger.error(e)
+        raise SystemExit from e
+
     except FileNotFoundError:
         logger.error(f"file not found: '{value}', no config file loaded")
         config = {}
@@ -44,6 +48,7 @@ def update_meta(f):
         if ctx.info_name == "gladosctl":
             ctx.meta.update(ctx.params)
         else:
+            ctx.meta.setdefault(ctx.info_name, {})
             ctx.meta[ctx.info_name].update(ctx.params)
 
         return ctx.invoke(f, *args, **kwargs)
