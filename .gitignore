@@ -15,6 +15,11 @@ glados.json
 glados.toml
 glados.yaml
 glados.yml
+production.json
+production.toml
+production.yaml
+production.yml
+
 
 *~
 .#*

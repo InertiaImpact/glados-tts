@@ -126,7 +126,7 @@ def create_mary_router(root_path=""):
 def create_app(restapi_config):
     app = FastAPI(
         title="GLaDOS Text-to-speech API",
-        description="Generate audiofiles that sound like GLaDOS",
+        description="Generate audiofiles that sound like GLaDOS.\n\n api docs: [swagger](swagger) | [redoc](redoc)",
         version=__version__,
         license_info={"name": "MIT", "url": "https://en.wikipedia.org/wiki/MIT_License"},
         openapi_tags=[
@@ -151,7 +151,7 @@ def create_app(restapi_config):
     app.include_router(mary_router, prefix='/mary', tags=['mary'])
 
 
-    @app.get("/", tags=["api"])
+    @app.get("/", include_in_schema=False)
     async def index(request: Request):
         return {
             "info": "a http json api for GLaDOS Text-to-speech",
