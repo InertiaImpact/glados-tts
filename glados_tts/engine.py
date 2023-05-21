@@ -1,25 +1,17 @@
-import io
 import os
 import hashlib
+import mimetypes
 from time import time
 from functools import lru_cache
-from datetime import datetime
-from typing import Optional
+from pkg_resources import resource_filename
 
 import torch
 import soundfile
 from loguru import logger
-from pydantic import BaseModel, Field, FilePath
 
+import glados_tts
 from glados_tts.utils import tools
-
-
-class GLaDOSTTSAudioModel(BaseModel):
-    from_cache: str = False
-    text: str
-    audiofile_name: str
-    audiofile_path: Optional[FilePath]
-    audiofile_timestamp: datetime
+from glados_tts.models import GLaDOSResponse
 
 
 class GLaDOSError(Exception):
@@ -31,6 +23,9 @@ class GLaDOSInputError(GLaDOSError):
 
 
 class GLaDOS:
+    audio_formats = ["wav", "mp3"]
+    audio_mimetypes = [mimetypes.types_map.get("." + a) for a in audio_formats]
+
     def __init__(self):
         self.started = False
         self.models_loaded = False
@@ -38,23 +33,28 @@ class GLaDOS:
         self.device = self._select_device()
         logger.debug(f"selected device: '{self.device}'")
 
-        self.audio_dir = ""
-        self.fname_prefix = ""
-        self.audio_format = ""
+        self.audio_dir = None
+        self.fname_prefix = "GLaDOS-"
+        self.default_audio_format = "wav"
 
         # 22,05 kHz sample rate
         # TODO: should sample rate be a config value?
         self.sample_rate_khz = int(22050)
 
-    def start(self, audio_dir, audio_format="mp3", fname_prefix="GLaDOS-", delay_generate_models=True):
-        logger.debug(f"starting GLaDOS (dir: '{audio_dir}', prefix: {fname_prefix}, format: {audio_format})")
+    def start(self, audio_dir, default_audio_format=None, fname_prefix=None, delay_generate_models=True):
         self.audio_dir = audio_dir
-        self.fname_prefix = fname_prefix
-        self.audio_format = audio_format.lower()
+        if default_audio_format is not None:
+            self.default_audio_format = default_audio_format.lower()
+        if fname_prefix is not None:
+            self.fname_prefix = fname_prefix
 
-        # TODO: fix relative paths
-        self.glados = torch.jit.load('glados_tts/models/glados.pt')
-        self.vocoder = torch.jit.load('glados_tts/models/vocoder-gpu.pt', map_location=self.device)
+        logger.info(f"GLaDOS generated audio files store: '{audio_dir}' (default format: {self.default_audio_format})")
+
+        self.glados = torch.jit.load(
+            resource_filename(glados_tts.__name__, 'models/glados.pt'))
+        self.vocoder = torch.jit.load(
+            resource_filename(glados_tts.__name__, 'models/vocoder-gpu.pt'),
+            map_location=self.device)
 
         if delay_generate_models:
             logger.info("models are not loaded and will be generated on the first request")
@@ -64,14 +64,12 @@ class GLaDOS:
             self.models_loaded = True
         self.started = True
 
-
     @classmethod
     @lru_cache()
     def get(cls):
-        logger.success("you got me")
         return cls()
 
-    def get_tts_path(self, fname):
+    def get_audiofile_path(self, fname):
         return os.path.join(self.audio_dir, fname)
 
     def _generate_models(self):
@@ -81,7 +79,7 @@ class GLaDOS:
             prepared = tools.prepare_text(str(i))
             init = self.glados.generate_jit(prepared)
             init_mel = init['mel_post'].to(self.device)
-            init_vo = self.vocoder(init_mel)
+            init_vo = self.vocoder(init_mel)  # noqa
 
     def _prepare_text(f):
         def wrapped(self, text, *args, **kwargs):
@@ -113,7 +111,7 @@ class GLaDOS:
 
         return " ".join(text.split(" ")[:7])
 
-    def _make_fname(self, text):
+    def _make_fname(self, text, audio_format):
         """use the same "short name" as we do in logs, but only keeping alphanumeric
         characters and replacing whitespaces, for filesystem friendlyness.
 
@@ -135,7 +133,7 @@ class GLaDOS:
         h = hashlib.blake2b(digest_size=20)
         h.update(text.encode())
 
-        fname = f"{self.fname_prefix}_{base_fname}_{h.hexdigest()}.{self.audio_format}"
+        fname = f"{self.fname_prefix}{base_fname}_{h.hexdigest()}.{audio_format.lower()}"
 
         return fname
 
@@ -162,9 +160,7 @@ class GLaDOS:
             audio = audio.squeeze() * 32768.0
             return audio.cpu().numpy().astype('int16')
 
-
-
-    def tts_audio_to_file(self, text, use_cache=True):
+    def tts_audio_to_file(self, text, audio_format, use_cache):
         """generates the audio, writes it to a file and returns the path to
         the file.
 
@@ -173,7 +169,7 @@ class GLaDOS:
 
         """
 
-        fname = self._make_fname(text)
+        fname = self._make_fname(text, audio_format)
         audiofile_path = os.path.join(self.audio_dir, fname)
 
         if use_cache and os.path.exists(audiofile_path):
@@ -187,21 +183,20 @@ class GLaDOS:
             # generate the audio
             audio = self.tts_generate_audio(text)
             with open(audiofile_path, 'wb') as f:
-                soundfile.write(f, audio, self.sample_rate_khz, format=self.audio_format)
+                soundfile.write(f, audio, self.sample_rate_khz, format=audio_format)
 
             logger.debug(f"wrote file: '{fname}'")
 
         audiofile_timestamp = os.stat(audiofile_path).st_ctime
-        return GLaDOSTTSAudioModel(
+        return GLaDOSResponse(
             from_cache=from_cache,
             text=text,
-            audiofile_name=fname,
-            audiofile_timestamp=audiofile_timestamp
+            audio_format=audio_format,
+            audio_filename=fname,
+            audio_timestamp=audiofile_timestamp
         )
 
-
-
-    def say(self, text, use_cache=True):
+    def tts(self, text, audio_format="wav", use_cache=True):
         """shorthand function for Text-to-Speech.
 
         """
@@ -211,4 +206,4 @@ class GLaDOS:
 
         logger.info(f"input: '{text}'")
 
-        return self.tts_audio_to_file(text, use_cache=use_cache)
+        return self.tts_audio_to_file(text, audio_format, use_cache)

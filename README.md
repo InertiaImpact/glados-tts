@@ -31,9 +31,9 @@ This fork modernizes and improves the Python code in the project and does a bunc
 * `[DONE]`: Versioned packages with `poetry` and `pyproject.toml`
 * `[DONE]`: Configuration handling with `click`.
 * `[DONE]`: Better logging with `loguru`
-* `[WIP]`: Python coding style and code quality improvements (proper handling of `file` object, improved logging..)
-* `[WIP]`: Switch to using ASGI with `uvicorn` and `fastapi` instead of Flask and WSGI, and support production-capable deployments as default.
-* `[TODO]`: Docker support
+* `[DONE]`: Python coding style and code quality improvements (proper handling of `file` object, improved logging..)
+* `[DONE]`: Switch to using ASGI with `uvicorn` and `fastapi` instead of Flask and WSGI, and support production-capable deployments as default.
+* `[DONE]`: Docker support
 * `[TODO]`: Support Home Assistant through the [`notify` integration](https://www.home-assistant.io/integrations/notify/)
 * `[TODO]`: see if its possible to avoid `espeak-ng` as a system package dependency (python bindings, buliding the C library, etc)
 
@@ -68,19 +68,15 @@ poetry install
 If you want to just play around with the TTS, works on the shell:
 
 ```shell
-poetry run python3 glados.py
+poetry run gladosctl
 ```
 
 The TTS engine can also run as a web server:
 
 ```shell
-poetry run python3 engine.py
+poetry run gladosctl restapi
 ```
 
-Default port is 8124
-Be sure to update settings.env variable in your main Glados-voice-assistant directory:
-```
-TTS_ENGINE_API			= http://192.168.1.3:8124/synthesize/
-```
+A public instance of the http api is running at `http://www.sudo.is/api/glados`, where you can also read [api documentation](https://www.sudo.is/api/glados/docs). 
 
 ![chell](chell.jpg)

@@ -10,3 +10,8 @@ def prepare_text(text: str) -> str:
     cleaner = Cleaner('english_cleaners', True, 'en-us')
     tokenizer = Tokenizer()
     return torch.as_tensor(tokenizer(cleaner(text)), dtype=torch.int, device='cpu').unsqueeze(0)
+
+
+def iterfile(file_path):
+    with open(file_path, mode='rb') as f:
+        yield from f

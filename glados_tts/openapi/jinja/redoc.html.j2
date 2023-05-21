@@ -1,0 +1,28 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <title>GLaDOS TSS Documentation</title>
+    <!-- needed for adaptive design -->
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="shortcut icon" href="static/fastapi.png">
+    <!--
+    ReDoc doesn't change outer page styles
+    -->
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+    </head>
+    <body>
+    <noscript>
+        ReDoc requires Javascript to function. Please enable it to browse the documentation.
+    </noscript>
+    <redoc spec-url="{{ openapi_url }}"></redoc>
+    <script src="{{ static_url }}/redoc.standalone.js"> </script>
+    </body>
+    </html>

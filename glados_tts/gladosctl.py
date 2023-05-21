@@ -1,19 +1,19 @@
-import sys
 import json
 import os
+from functools import update_wrapper
 
-from soundfile import available_formats as audio_available_formats
 from loguru import logger
 import click
-from click_help_colors import HelpColorsGroup, HelpColorsCommand, version_option
+from click_help_colors import HelpColorsGroup, version_option
 import uvicorn
+from fastapi import FastAPI
 
 import glados_tts
 import glados_tts.restapi
 from glados_tts.engine import GLaDOS
 
 
-DEFAULT_GLADOS_CONFIG = "glados.json"
+DEFAULT_GLADOS_CONFIG = os.path.join(os.environ["HOME"], ".config", "glados.json")
 CONTEXT_SETTINGS = {
     "max_content_width": 200,
     "terminal_width": 120,
@@ -27,17 +27,27 @@ CONTEXT_SETTINGS = {
 }
 
 def read_config_file(ctx, param, value):
-    print("read_config_file callback")
     try:
         with open(value, 'r') as f:
             config = json.load(f)
-            ctx.default_map.update(config)
+        ctx.default_map.update(config)
+        ctx.meta.update(config)
     except FileNotFoundError:
         logger.error(f"file not found: '{value}', no config file loaded")
         config = {}
 
     return value
 
+def update_meta(f):
+    @click.pass_context
+    def new_func(ctx, *args, **kwargs):
+        if ctx.info_name == "gladosctl":
+            ctx.meta.update(ctx.params)
+        else:
+            ctx.meta[ctx.info_name].update(ctx.params)
+
+        return ctx.invoke(f, *args, **kwargs)
+    return update_wrapper(new_func, f)
 
 @click.group(
     cls=HelpColorsGroup,
@@ -58,56 +68,26 @@ def read_config_file(ctx, param, value):
     show_default=True,
     default=DEFAULT_GLADOS_CONFIG
 )
+@click.option("--debug/--no-debug", default=False, show_envvar=True, show_default=True)
+@click.option("--log-level", show_envvar=True, show_default=True, default="INFO")
 @click.option(
-    "--debug/--no-debug",
-    show_envvar=True,
-    default=False
-)
-@click.option(
-    "--log-level",
-    show_envvar=True,
-    default="INFO"
-)
-@click.option(
-    "--audio-dir",
+    "--audio-dir", default="audio/", show_default=True, show_envvar=True,
     type=click.Path(dir_okay=True),
     help="where generated audiofiles get saved",
-    default="audio/",
-    show_default=True,
-    show_envvar=True
 )
 @click.option(
-    "--audio-format",
-    type=click.Choice(audio_available_formats(), case_sensitive=False),
-    default="mp3",
-    show_envvar=True,
-    show_default=True
-)
-@click.option(
-    "--fname-prefix",
-    help="saved audio files are prefixed with this string",
-    default="GLaDOS-tts",
-    show_envvar=True
-)
-@click.option(
-    "--env", type=click.Choice(['dev', 'prod']),
-    default="prod",
-    show_envvar=True,
-    show_default=True,
-    required=True
+    "--audio-format", default="wav", show_default=True, show_envvar=True,
+    type=click.Choice(GLaDOS.audio_formats, case_sensitive=False),
 )
 @version_option(
-    prog_name=glados_tts.__name__,
-    version=glados_tts.__version__,
-    version_color="yellow",
-    prog_name_color="green"
+    prog_name=glados_tts.__name__, version=glados_tts.__version__,
+    version_color="yellow", prog_name_color="green"
 )
+@update_meta
 @click.pass_context
 def cli(ctx, *args, **kwargs):
-    ctx.meta.update(ctx.params)
-
     glados = GLaDOS.get()
-    glados.start(kwargs['audio_dir'], kwargs['audio_format'], kwargs['fname_prefix'])
+    glados.start(kwargs['audio_dir'], kwargs['audio_format'])
 
 
 @cli.command(name="restapi")
@@ -116,18 +96,24 @@ def cli(ctx, *args, **kwargs):
 @click.option("--root-path", default="", show_envvar=True, show_default=True)
 @click.option("--forwarded-allow-ips", default="127.0.0.1", show_envvar=True, show_default=True)
 @click.option("--workers", default=1, show_envvar=True, show_default=True)
+@update_meta
 @click.pass_context
 def cli_gladosapi(ctx, host, port, root_path, forwarded_allow_ips, workers):
+    debug_mode = ctx.meta.get("debug", False)
+    if root_path != "":
+        logger.warning(f'path="{root_path}"')
+
     config = uvicorn.Config(
         "glados_tts.restapi:create_app",
         host=host,
         port=port,
-        root_path=root_path,
         log_level=ctx.meta.get("log_level").lower(),
         proxy_headers=True,
         forwarded_allow_ips=forwarded_allow_ips,
-        workers=workers,
-        factory=True
+        reload=debug_mode,
+        workers=workers if not debug_mode else None,
+        factory=True,
+        root_path=root_path
     )
     server = uvicorn.Server(config)
     server.run()

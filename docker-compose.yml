@@ -1,0 +1,22 @@
+---
+
+version: "3.9"
+services:
+  glados:
+    image: git.sudo.is/b/glados_tts:latest
+    container_name: glados
+    restart: "no"
+    user: 1000:1000
+    environment:
+      - GLADOS_RESTAPI_HOST=0.0.0.0
+      - GLADOS_CONFIG=/etc/glados.json
+      - GLADOS_RESTAPI_ROOT_PATH=/api/glados
+    ports:
+      - "0.0.0.0:8124:8124"
+    volumes:
+      - type: bind
+        source: /srv/glados/audio
+        target: /srv/glados/audio
+      - type: bind
+        source: /home/ben/.config/glados.json
+        target: /etc/glados.json
