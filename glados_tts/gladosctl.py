@@ -114,10 +114,10 @@ def cli(ctx, *args, **kwargs):
 
 
 @cli.command(name="restapi")
-@click.option("--host", default="127.0.0.1", show_envvar=True, show_default=True)
+@click.option("--host", default="0.0.0.0", show_envvar=True, show_default=True)
 @click.option("--port", default="8124", type=int, show_envvar=True, show_default=True)
 @click.option("--root-path", default="", show_envvar=True, show_default=True)
-@click.option("--forwarded-allow-ips", default="127.0.0.1", show_envvar=True, show_default=True)
+@click.option("--forwarded-allow-ips", default="0.0.0.0", show_envvar=True, show_default=True)
 @click.option("--workers", default=1, show_envvar=True, show_default=True)
 @update_meta
 @click.pass_context
