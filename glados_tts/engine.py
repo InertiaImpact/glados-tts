@@ -25,6 +25,7 @@ class GLaDOSInputError(GLaDOSError):
 class GLaDOS:
     audio_formats = ["wav", "mp3"]
     audio_mimetypes = [mimetypes.types_map.get("." + a) for a in audio_formats]
+    
 
     def __init__(self):
         self.started = False
@@ -43,6 +44,8 @@ class GLaDOS:
 
     def start(self, audio_dir, default_audio_format=None, fname_prefix=None, delay_generate_models=True):
         self.audio_dir = audio_dir
+        os.makedirs(self.audio_dir, exist_ok=True)
+
         if default_audio_format is not None:
             self.default_audio_format = default_audio_format.lower()
         if fname_prefix is not None:

@@ -12,8 +12,26 @@ import glados_tts
 import glados_tts.restapi
 from glados_tts.engine import GLaDOS
 
+import click
 
-DEFAULT_GLADOS_CONFIG = os.path.join(os.environ["HOME"], ".config", "glados.json")
+# Check for the correct environment variable based on the operating system
+home_dir = os.environ.get("HOME") or os.environ.get("USERPROFILE")
+if not home_dir:
+    raise EnvironmentError("Neither 'HOME' nor 'USERPROFILE' environment variables are set.")
+
+DEFAULT_GLADOS_CONFIG = os.path.join(home_dir, ".config", "glados.json")
+
+
+@click.command()
+@click.pass_context
+def cli(ctx):
+    # Make sure `ctx.meta` is initialized as a dict
+    ctx.ensure_object(dict)
+
+    # Safely get the log level and provide a default value
+    log_level = (ctx.meta.get("log_level") or "INFO").lower()
+
+
 CONTEXT_SETTINGS = {
     "max_content_width": 200,
     "terminal_width": 120,
@@ -105,6 +123,8 @@ def cli(ctx, *args, **kwargs):
 @click.pass_context
 def cli_gladosapi(ctx, host, port, root_path, forwarded_allow_ips, workers):
     debug_mode = ctx.meta.get("debug", False)
+    log_level = ctx.meta.get("log_level", "INFO").lower()  # Safely handle NoneType by providing a default value
+    
     if root_path != "":
         logger.warning(f'path="{root_path}"')
 
@@ -112,7 +132,7 @@ def cli_gladosapi(ctx, host, port, root_path, forwarded_allow_ips, workers):
         "glados_tts.restapi:create_app",
         host=host,
         port=port,
-        log_level=ctx.meta.get("log_level").lower(),
+        log_level=log_level,
         proxy_headers=True,
         forwarded_allow_ips=forwarded_allow_ips,
         reload=debug_mode,
@@ -122,6 +142,7 @@ def cli_gladosapi(ctx, host, port, root_path, forwarded_allow_ips, workers):
     )
     server = uvicorn.Server(config)
     server.run()
+
 
 
 def main():
