@@ -12,13 +12,12 @@ from glados_tts.utils.tools import prepare_text
 print("\033[1;94mINFO:\033[;97m Initializing TTS Engine...")
 
 # Select the device
-#if torch.is_vulkan_available():
-#    device = 'vulkan'
-#if torch.cuda.is_available():
-#    device = 'cuda'
-#else:
-#    device = 'cpu'
-device = 'cpu'
+if torch.is_vulkan_available():
+    device = 'vulkan'
+if torch.cuda.is_available():
+    device = 'cuda'
+else:
+    device = 'cpu'
 
 # Load models
 if __name__ == "__main__":
